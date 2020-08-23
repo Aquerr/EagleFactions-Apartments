@@ -7,6 +7,7 @@ public final class PluginPermissions
 
     public static final String REGION_COMMANDS = "eaglefactionsapartments.command.region";
     public static final String REGION_CREATE_COMMAND = "eaglefactionsapartments.command.region.create";
+    public static final String REGION_DELETE_COMMAND = "eaglefactionsapartments.command.region.delete";
     public static final String REGION_INFO_COMMAND = "eaglefactionsapartments.command.region.info";
     public static final String REGION_LIST_COMMAND = "eaglefactionsapartments.command.region.list";
 

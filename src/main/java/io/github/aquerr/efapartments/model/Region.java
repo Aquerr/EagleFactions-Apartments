@@ -4,6 +4,7 @@ import org.spongepowered.api.util.AABB;
 
 import java.time.Instant;
 import java.util.Objects;
+import java.util.UUID;
 
 public class Region
 {
@@ -19,7 +20,7 @@ public class Region
     private String factionName;
 
     // Name of the player that rent this region.
-    private String rentBy;
+    private UUID rentBy;
     private Instant rentExpiryDateTime;
 
     public Region()
@@ -35,6 +36,7 @@ public class Region
         this.aabb = aabb;
         this.pricePerDay = pricePerDay;
         this.rentBy = null;
+        this.rentExpiryDateTime = null;
     }
 
     public int getId()
@@ -62,7 +64,7 @@ public class Region
         return pricePerDay;
     }
 
-    public String getRentBy()
+    public UUID getRentBy()
     {
         return rentBy;
     }
@@ -91,7 +93,7 @@ public class Region
         return this;
     }
 
-    public Region setRentBy(String rentBy)
+    public Region setRentBy(UUID rentBy)
     {
         this.rentBy = rentBy;
         return this;
@@ -101,6 +103,16 @@ public class Region
     {
         this.factionName = factionName;
         return this;
+    }
+
+    public Instant getRentExpiryDateTime()
+    {
+        return rentExpiryDateTime;
+    }
+
+    public void setRentExpiryDateTime(Instant rentExpiryDateTime)
+    {
+        this.rentExpiryDateTime = rentExpiryDateTime;
     }
 
     @Override

@@ -2,14 +2,12 @@ package io.github.aquerr.efapartments;
 
 import com.google.inject.Inject;
 import io.github.aquerr.eaglefactions.api.EagleFactions;
-import io.github.aquerr.efapartments.command.RegionCreateCommand;
-import io.github.aquerr.efapartments.command.RegionListCommand;
-import io.github.aquerr.efapartments.command.WandCommand;
-import io.github.aquerr.efapartments.listener.BlockBreakListener;
+import io.github.aquerr.efapartments.command.*;
+import io.github.aquerr.efapartments.command.args.RegionCommandElement;
+import io.github.aquerr.efapartments.listener.BlockChangeListener;
 import io.github.aquerr.efapartments.listener.WandUsageListener;
 import io.github.aquerr.efapartments.manager.RegionRegionManagerImpl;
 import io.github.aquerr.efapartments.manager.RegionManager;
-import io.github.aquerr.efapartments.model.Region;
 import io.github.aquerr.efapartments.model.SelectionPoints;
 import io.github.aquerr.efapartments.storage.RegionStorage;
 import org.slf4j.Logger;
@@ -25,6 +23,7 @@ import org.spongepowered.api.event.game.state.GamePostInitializationEvent;
 import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.plugin.Dependency;
 import org.spongepowered.api.plugin.Plugin;
+import org.spongepowered.api.service.economy.EconomyService;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
 
@@ -62,6 +61,7 @@ public class EagleFactionsApartments
 
     // Integration
     private EagleFactions eagleFactions;
+    private EconomyService economyService;
 
     @Inject
     private Logger logger;
@@ -86,15 +86,24 @@ public class EagleFactionsApartments
     @Listener
     public void onPostInit(GamePostInitializationEvent event)
     {
+        // Load Eagle Factions
         Optional<?> optionalEagleFactionsInstance = Sponge.getPluginManager().getPlugin("eaglefactions").get().getInstance();
         optionalEagleFactionsInstance.ifPresent(o -> this.eagleFactions = (EagleFactions) o);
 
         if (this.eagleFactions == null)
         {
-            //TODO: Stop this add-on plugin. It cannot work without Eagle Factions...
-            Sponge.getServer().getConsole().sendMessage(Text.of(PLUGIN_ERROR_PREFIX, "Could not establish connection with Eagle Factions. This plugin will be stopped!"));
+            Sponge.getServer().getConsole().sendMessage(Text.of(PLUGIN_ERROR_PREFIX, TextColors.RED, "Could not establish connection with Eagle Factions. This plugin will be stopped!"));
             stopPlugin();
-            Sponge.getServer().getConsole().sendMessage(Text.of(PLUGIN_ERROR_PREFIX, NAME + " turned off."));
+        }
+
+        // Load economy service
+        final Optional<EconomyService> optionalEconomyService = Sponge.getServiceManager().provide(EconomyService.class);
+        optionalEconomyService.ifPresent(economyService1 -> this.economyService = economyService1);
+
+        if (this.economyService == null)
+        {
+            Sponge.getServer().getConsole().sendMessage(Text.of(PLUGIN_ERROR_PREFIX, TextColors.RED, "Could not find an economy provider on the server. One is required for this plugin to run!"));
+            stopPlugin();
         }
     }
 
@@ -118,6 +127,11 @@ public class EagleFactionsApartments
         return this.eagleFactions;
     }
 
+    public EconomyService getEconomyService()
+    {
+        return this.economyService;
+    }
+
     private void registerCommands()
     {
         SUBCOMMANDS.put(Collections.singletonList("wand"), CommandSpec.builder()
@@ -139,6 +153,20 @@ public class EagleFactionsApartments
                 .executor(new RegionListCommand(this))
                 .build());
 
+        SUBCOMMANDS.put(Collections.singletonList("rent"), CommandSpec.builder()
+                .description(Text.of("Rents a selected region"))
+                .permission(PluginPermissions.RENT_COMMAND)
+                .executor(new RentCommand(this))
+                .arguments(new RegionCommandElement(this, Text.of("region")), GenericArguments.duration(Text.of("duration")))
+                .build());
+
+        SUBCOMMANDS.put(Collections.singletonList("deleteregion"), CommandSpec.builder()
+                .description(Text.of("Deletes a specific region"))
+                .permission(PluginPermissions.REGION_DELETE_COMMAND)
+                .executor(new RegionDeleteCommand(this))
+                .arguments(new RegionCommandElement(this, Text.of("region")))
+                .build());
+
         CommandSpec eagleFactionsApartmentsRootCommand = CommandSpec.builder()
                 .children(SUBCOMMANDS)
                 .build();
@@ -149,7 +177,7 @@ public class EagleFactionsApartments
     private void registerListeners()
     {
         final EventManager eventManager = Sponge.getEventManager();
-        eventManager.registerListeners(this, new BlockBreakListener(this));
+        eventManager.registerListeners(this, new BlockChangeListener(this));
         eventManager.registerListeners(this, new WandUsageListener(this));
     }
 
@@ -166,5 +194,7 @@ public class EagleFactionsApartments
         eventManager.unregisterPluginListeners(this);
         commandManager.getOwnedBy(this).forEach(commandManager::removeMapping);
         SUBCOMMANDS.clear();
+
+        Sponge.getServer().getConsole().sendMessage(Text.of(PLUGIN_ERROR_PREFIX, NAME + " turned off."));
     }
 }
