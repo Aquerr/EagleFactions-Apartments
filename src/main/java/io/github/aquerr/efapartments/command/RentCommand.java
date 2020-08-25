@@ -15,6 +15,8 @@ import org.spongepowered.api.text.format.TextColors;
 
 import java.math.BigDecimal;
 import java.time.Duration;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Optional;
 
 public class RentCommand extends AbstractCommand
@@ -33,22 +35,22 @@ public class RentCommand extends AbstractCommand
         final Player player = (Player)source;
         final Region region = args.requireOne(Text.of("region"));
         final Duration duration = args.requireOne(Text.of("duration"));
-        
-        //TODO: Get duration from args.
 
-        int days = 0;
+        final Instant rentEndDate = Instant.now().plus(duration.getSeconds(), ChronoUnit.SECONDS);
 
-        //TOOD: Try get money from the player.
+        //Try get money from the player.
         final Optional<UniqueAccount> optionalUniqueAccount = super.getPlugin().getEconomyService().getOrCreateAccount(player.getUniqueId());
         if (!optionalUniqueAccount.isPresent())
             throw new CommandException(EagleFactionsApartments.PLUGIN_ERROR_PREFIX.concat(Text.of("Could not get player's account! Player name = " + player.getName())));
 
         final UniqueAccount uniqueAccount = optionalUniqueAccount.get();
-        if (uniqueAccount.getBalance(super.getPlugin().getEconomyService().getDefaultCurrency()).floatValue() >= region.getPricePerDay() * days)
+        if (uniqueAccount.getBalance(super.getPlugin().getEconomyService().getDefaultCurrency()).floatValue() >= region.getPricePerDay() * duration.toDays())
         {
-            uniqueAccount.withdraw(super.getPlugin().getEconomyService().getDefaultCurrency(), new BigDecimal(region.getPricePerDay() * days), Cause.builder().append(player).append(super.getPlugin()).build(Sponge.getCauseStackManager().getCurrentContext()));
-            region.setRentBy(player.getUniqueId().toString());
+            uniqueAccount.withdraw(super.getPlugin().getEconomyService().getDefaultCurrency(), BigDecimal.valueOf(region.getPricePerDay() * duration.toDays()), Cause.builder().append(player).append(super.getPlugin()).build(Sponge.getCauseStackManager().getCurrentContext()));
+            region.setRentBy(player.getUniqueId());
+            region.setRentExpiryDateTime(rentEndDate);
             super.getPlugin().getRegionManager().save(region);
+            player.sendMessage(Text.of(EagleFactionsApartments.PLUGIN_PREFIX, "You rent the " + region.getName() + " region!"));
         }
         else
         {

@@ -28,15 +28,15 @@ public class Region
 
     }
 
-    public Region(final int id, final String name, final String factionName, final AABB aabb, final float pricePerDay)
+    public Region(final int id, final String name, final String factionName, final AABB aabb, final float pricePerDay, final UUID rentBy, final Instant rentExpiryDateTime)
     {
         this.id = id;
         this.name = name;
         this.factionName = factionName;
         this.aabb = aabb;
         this.pricePerDay = pricePerDay;
-        this.rentBy = null;
-        this.rentExpiryDateTime = null;
+        this.rentBy = rentBy;
+        this.rentExpiryDateTime = rentExpiryDateTime;
     }
 
     public int getId()
@@ -105,7 +105,7 @@ public class Region
         return this;
     }
 
-    public Instant getRentExpiryDateTime()
+    public Instant getRentExpirationDateTime()
     {
         return rentExpiryDateTime;
     }

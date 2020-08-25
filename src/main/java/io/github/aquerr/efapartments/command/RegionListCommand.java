@@ -44,7 +44,7 @@ public class RegionListCommand extends AbstractCommand
             regionsLines.add(Text.of("- " + region.getName()));
         }
 
-        final PaginationList paginationList = PaginationList.builder().contents(regionsLines).header(Text.of(TextColors.AQUA, "Faction Regions")).padding(Text.of(TextColors.AQUA, "-")).linesPerPage(14).build();
+        final PaginationList paginationList = PaginationList.builder().contents(regionsLines).title(Text.of(TextColors.AQUA, "Faction Regions")).padding(Text.of(TextColors.AQUA, "-")).linesPerPage(14).build();
         paginationList.sendTo(player);
 
         return CommandResult.success();

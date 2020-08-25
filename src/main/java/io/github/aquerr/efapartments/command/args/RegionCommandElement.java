@@ -44,6 +44,10 @@ public class RegionCommandElement extends CommandElement
         final Region region = this.plugin.getRegionManager().find(faction.getName(), regionName);
         if(region == null)
             throw args.createError(Text.of("Argument is not a valid region!"));
+
+        if (region.getRentBy() != null)
+            throw args.createError(Text.of("This region is already occupied by someone."));
+
         return region;
     }
 

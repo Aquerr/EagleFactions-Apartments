@@ -11,13 +11,16 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.spongepowered.api.util.AABB;
 import org.spongepowered.api.util.TypeTokens;
 
+import java.time.Instant;
+import java.util.UUID;
+
 public class RegionTypeSerializer implements TypeSerializer<Region>
 {
     @Override
     @Nullable
     public Region deserialize(@NonNull TypeToken<?> type, @NonNull ConfigurationNode value) throws ObjectMappingException
     {
-        if (!(type.getType() instanceof Region))
+        if (!(type.getType().getTypeName().equals(Region.class.getName())))
             throw new ObjectMappingException("Wrong type token!");
 
         final int regionId = value.getNode("id").getInt();
@@ -27,8 +30,10 @@ public class RegionTypeSerializer implements TypeSerializer<Region>
         final AABB aabb = new AABB(firstCorner, secondCorner);
         final String faction = value.getNode("faction").getString();
         final float price = value.getNode("price").getFloat();
+        final UUID rentBy = value.getNode("rentBy").getValue(TypeTokens.UUID_TOKEN);
+        final Instant rentExpiryDateTime = value.getNode("rentExpirationDateTime").getValue(TypeTokens.INSTANT_TOKEN);
 
-        return new Region(regionId, regionName, faction, aabb, price);
+        return new Region(regionId, regionName, faction, aabb, price, rentBy, rentExpiryDateTime);
     }
 
     @Override
@@ -36,9 +41,11 @@ public class RegionTypeSerializer implements TypeSerializer<Region>
     {
         value.getNode("id").setValue(obj.getId());
         value.getNode("name").setValue(obj.getName());
-        value.getNode("firstCorner").setValue(obj.getAabb().getMin().toInt());
-        value.getNode("secondCorner").setValue(obj.getAabb().getMax().toInt());
+        value.getNode("firstCorner").setValue(TypeTokens.VECTOR_3I_TOKEN, obj.getAabb().getMin().toInt());
+        value.getNode("secondCorner").setValue(TypeTokens.VECTOR_3I_TOKEN, obj.getAabb().getMax().toInt());
         value.getNode("faction").setValue(obj.getFactionName());
         value.getNode("price").setValue(obj.getPricePerDay());
+        value.getNode("rentBy").setValue(TypeTokens.UUID_TOKEN, obj.getRentBy());
+        value.getNode("rentExpirationDateTime").setValue(TypeTokens.INSTANT_TOKEN, obj.getRentExpirationDateTime());
     }
 }

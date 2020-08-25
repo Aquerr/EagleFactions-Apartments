@@ -61,21 +61,12 @@ public class RegionStorage implements Storage
     @Override
     public Region findRegion(String factionName, String name)
     {
-        if (Files.notExists(this.regionsDirPath.resolve(factionName)))
-        {
-            try
-            {
-                Files.createDirectory(this.regionsDirPath.resolve(factionName));
-            }
-            catch (IOException e)
-            {
-                e.printStackTrace();
-            }
-        }
+        final Path regionFilePath = this.regionsDirPath.resolve(factionName).resolve(name + ".conf");
+        if (Files.notExists(regionFilePath))
+            return null;
 
         // Maybe we should cache loaders instead of creating them everytime?
-        // Caching them would open file streams which
-        final HoconConfigurationLoader hoconConfigurationLoader = HoconConfigurationLoader.builder().setPath(this.regionsDirPath.resolve(factionName).resolve(name + ".conf")).build();
+        final HoconConfigurationLoader hoconConfigurationLoader = HoconConfigurationLoader.builder().setPath(regionFilePath).build();
         try
         {
             final ConfigurationNode configurationNode = hoconConfigurationLoader.load();
@@ -109,14 +100,14 @@ public class RegionStorage implements Storage
     @Override
     public List<Region> findAllForFaction(String factionName)
     {
-        final List<Region> regions = new ArrayList<>();
         final File[] regionFiles = this.regionsDirPath.resolve(factionName).toFile().listFiles();
+        final List<Region> regions = new ArrayList<>();
         if (regionFiles == null)
             return regions;
 
         for (final File regionFile : regionFiles)
         {
-            final Region region = findRegion(factionName, regionFile.getName());
+            final Region region = findRegion(factionName, regionFile.getName().substring(0, regionFile.getName().lastIndexOf(".")));
             if (region != null)
                 regions.add(region);
         }
@@ -127,11 +118,36 @@ public class RegionStorage implements Storage
     @Override
     public void save(Region region)
     {
-        final HoconConfigurationLoader hoconConfigurationLoader = HoconConfigurationLoader.builder().setPath(this.regionsDirPath.resolve(region.getFactionName()).resolve(region.getName() + ".conf")).build();
+        if (Files.notExists(this.regionsDirPath.resolve(region.getFactionName())))
+        {
+            try
+            {
+                Files.createDirectory(this.regionsDirPath.resolve(region.getFactionName()));
+            }
+            catch (IOException e)
+            {
+                e.printStackTrace();
+            }
+        }
+        final Path regionPath = this.regionsDirPath.resolve(region.getFactionName()).resolve(region.getName() + ".conf");
+        if (Files.notExists(regionPath))
+        {
+            try
+            {
+                Files.createFile(regionPath);
+            }
+            catch (IOException e)
+            {
+                e.printStackTrace();
+            }
+        }
+
+        final HoconConfigurationLoader hoconConfigurationLoader = HoconConfigurationLoader.builder().setPath(regionPath).build();
         try
         {
             final ConfigurationNode configurationNode = hoconConfigurationLoader.load();
             configurationNode.setValue(RegionStorage.REGION_TYPE_TOKEN, region);
+            hoconConfigurationLoader.save(configurationNode);
         }
         catch (IOException | ObjectMappingException e)
         {

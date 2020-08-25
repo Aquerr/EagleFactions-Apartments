@@ -54,7 +54,7 @@ public class RegionCreateCommand extends AbstractCommand
         if ((optionalFactionAtFirstPoint.isPresent() && optionalFactionAtFirstPoint.get().getName().equals(playerFaction.getName()))
                 && (optionalFactionAtSecondPoint.isPresent() && optionalFactionAtSecondPoint.get().getName().equals(playerFaction.getName())))
         {
-            final Region region = new Region(super.getPlugin().getRegionManager().getNewFreeId(), name, playerFaction.getName(), new AABB(firstPoint, secondPoint), (float)pricePerDay);
+            final Region region = new Region(super.getPlugin().getRegionManager().getNewFreeId(), name, playerFaction.getName(), new AABB(firstPoint, secondPoint), (float)pricePerDay, null, null);
             super.getPlugin().getRegionManager().save(region);
             player.sendMessage(EagleFactionsApartments.PLUGIN_PREFIX.concat(Text.of("Region has been successfully created!")));
         }

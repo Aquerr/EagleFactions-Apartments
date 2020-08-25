@@ -3,6 +3,7 @@ package io.github.aquerr.efapartments.manager;
 import io.github.aquerr.efapartments.model.Region;
 import io.github.aquerr.efapartments.storage.RegionStorage;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
@@ -42,14 +43,14 @@ public class RegionRegionManagerImpl implements RegionManager
     @Override
     public List<Region> findAll()
     {
-        return regionStorage.findAll();
+        return new ArrayList<>(regionStorage.findAll());
     }
 
     @Override
     public List<Region> findAllForFaction(String factionName)
     {
         final CompletableFuture<List<Region>> future = CompletableFuture.supplyAsync(() -> regionStorage.findAllForFaction(factionName));
-        return future.join();
+        return new ArrayList<>(future.join());
     }
 
     @Override

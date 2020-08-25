@@ -1,5 +1,6 @@
 package io.github.aquerr.efapartments;
 
+import com.google.common.reflect.TypeToken;
 import com.google.inject.Inject;
 import io.github.aquerr.eaglefactions.api.EagleFactions;
 import io.github.aquerr.efapartments.command.*;
@@ -8,8 +9,12 @@ import io.github.aquerr.efapartments.listener.BlockChangeListener;
 import io.github.aquerr.efapartments.listener.WandUsageListener;
 import io.github.aquerr.efapartments.manager.RegionRegionManagerImpl;
 import io.github.aquerr.efapartments.manager.RegionManager;
+import io.github.aquerr.efapartments.model.Region;
 import io.github.aquerr.efapartments.model.SelectionPoints;
 import io.github.aquerr.efapartments.storage.RegionStorage;
+import io.github.aquerr.efapartments.storage.serializer.RegionTypeSerializer;
+import ninja.leaping.configurate.ConfigurationOptions;
+import ninja.leaping.configurate.objectmapping.serialize.TypeSerializers;
 import org.slf4j.Logger;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandCallable;
@@ -21,14 +26,18 @@ import org.spongepowered.api.event.EventManager;
 import org.spongepowered.api.event.game.state.GameInitializationEvent;
 import org.spongepowered.api.event.game.state.GamePostInitializationEvent;
 import org.spongepowered.api.event.Listener;
+import org.spongepowered.api.event.game.state.GamePreInitializationEvent;
+import org.spongepowered.api.event.game.state.GameStartedServerEvent;
 import org.spongepowered.api.plugin.Dependency;
 import org.spongepowered.api.plugin.Plugin;
+import org.spongepowered.api.scheduler.Task;
 import org.spongepowered.api.service.economy.EconomyService;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
 
 import java.nio.file.Path;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 @Plugin(
         id = EagleFactionsApartments.ID,
@@ -72,6 +81,14 @@ public class EagleFactionsApartments
 
     public EagleFactionsApartments()
     {
+
+    }
+
+    @Listener
+    public void onPreInit(GamePreInitializationEvent event)
+    {
+        registerTypeSerializers();
+
         RegionStorage regionStorage = new RegionStorage(this.configDir);
         this.regionManager = new RegionRegionManagerImpl(regionStorage);
     }
@@ -95,6 +112,11 @@ public class EagleFactionsApartments
             Sponge.getServer().getConsole().sendMessage(Text.of(PLUGIN_ERROR_PREFIX, TextColors.RED, "Could not establish connection with Eagle Factions. This plugin will be stopped!"));
             stopPlugin();
         }
+        else
+        {
+            Sponge.getServer().getConsole().sendMessage(Text.of(PLUGIN_PREFIX, TextColors.GREEN, "Successfully connected to Eagle Factions!"));
+        }
+
 
         // Load economy service
         final Optional<EconomyService> optionalEconomyService = Sponge.getServiceManager().provide(EconomyService.class);
@@ -105,6 +127,17 @@ public class EagleFactionsApartments
             Sponge.getServer().getConsole().sendMessage(Text.of(PLUGIN_ERROR_PREFIX, TextColors.RED, "Could not find an economy provider on the server. One is required for this plugin to run!"));
             stopPlugin();
         }
+        else
+        {
+            Sponge.getServer().getConsole().sendMessage(Text.of(PLUGIN_PREFIX, TextColors.GREEN, "Successfully connected to an economy provider! We got it boys!"));
+            eagleFactions.printInfo("Hello! Nice to see you " + NAME);
+        }
+    }
+
+    @Listener
+    public void onGameStart(final GameStartedServerEvent event)
+    {
+        startRentExpiryChecker();
     }
 
     public Path getConfigDir()
@@ -195,6 +228,18 @@ public class EagleFactionsApartments
         commandManager.getOwnedBy(this).forEach(commandManager::removeMapping);
         SUBCOMMANDS.clear();
 
-        Sponge.getServer().getConsole().sendMessage(Text.of(PLUGIN_ERROR_PREFIX, NAME + " turned off."));
+        Sponge.getServer().getConsole().sendMessage(Text.of(PLUGIN_ERROR_PREFIX, TextColors.RED, NAME + " turned off."));
+    }
+
+    private void registerTypeSerializers()
+    {
+        TypeSerializers.getDefaultSerializers().registerType(TypeToken.of(Region.class), new RegionTypeSerializer());
+    }
+
+    private void startRentExpiryChecker()
+    {
+        final Task.Builder taskBuilder = Sponge.getScheduler().createTaskBuilder();
+        //TODO: Let server owner change interval in config file.
+        taskBuilder.execute(new RentExpiryCheckTask(this)).interval(10, TimeUnit.MINUTES).async().submit(this);
     }
 }
