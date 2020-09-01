@@ -47,7 +47,7 @@ public class RentCommand extends AbstractCommand
         if (uniqueAccount.getBalance(super.getPlugin().getEconomyService().getDefaultCurrency()).floatValue() >= region.getPricePerDay() * days)
         {
             uniqueAccount.withdraw(super.getPlugin().getEconomyService().getDefaultCurrency(), new BigDecimal(region.getPricePerDay() * days), Cause.builder().append(player).append(super.getPlugin()).build(Sponge.getCauseStackManager().getCurrentContext()));
-            region.setRentBy(player.getUniqueId().toString());
+            region.setRentBy(player.getUniqueId());
             super.getPlugin().getRegionManager().save(region);
         }
         else
