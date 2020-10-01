@@ -13,7 +13,6 @@ import io.github.aquerr.efapartments.model.Region;
 import io.github.aquerr.efapartments.model.SelectionPoints;
 import io.github.aquerr.efapartments.storage.RegionStorage;
 import io.github.aquerr.efapartments.storage.serializer.RegionTypeSerializer;
-import ninja.leaping.configurate.ConfigurationOptions;
 import ninja.leaping.configurate.objectmapping.serialize.TypeSerializers;
 import org.slf4j.Logger;
 import org.spongepowered.api.Sponge;
@@ -64,7 +63,6 @@ public class EagleFactionsApartments
 
 
     private Map<UUID, SelectionPoints> playerSelectionPoints = new HashMap<>();
-
 
     private RegionManager regionManager;
 
@@ -191,6 +189,20 @@ public class EagleFactionsApartments
                 .permission(PluginPermissions.RENT_COMMAND)
                 .executor(new RentCommand(this))
                 .arguments(new RegionCommandElement(this, Text.of("region")), GenericArguments.duration(Text.of("duration")))
+                .build());
+
+        SUBCOMMANDS.put(Collections.singletonList("rentout"), CommandSpec.builder()
+                .description(Text.of("Rents out a region to the selected player"))
+                .permission(PluginPermissions.RENT_OUT_COMMAND)
+                .executor(new RentOutCommand(this))
+                .arguments(new RegionCommandElement(this, Text.of("region")), GenericArguments.player(Text.of("player")), GenericArguments.duration(Text.of("duration")))
+                .build());
+
+        SUBCOMMANDS.put(Collections.singletonList("kick"), CommandSpec.builder()
+                .description(Text.of("Kicks player from region"))
+                .permission(PluginPermissions.KICK_COMMAND)
+                .executor(new KickCommand(this))
+                .arguments(GenericArguments.player(Text.of("player")))
                 .build());
 
         SUBCOMMANDS.put(Collections.singletonList("deleteregion"), CommandSpec.builder()

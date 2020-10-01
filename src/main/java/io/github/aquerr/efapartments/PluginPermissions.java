@@ -12,6 +12,8 @@ public final class PluginPermissions
     public static final String REGION_LIST_COMMAND = "eaglefactionsapartments.command.region.list";
 
     public static final String RENT_COMMAND = "eaglefactionsapartments.command.rent";
+    public static final String RENT_OUT_COMMAND = "eaglefactionsapartments.command.rentout";
+    public static final String KICK_COMMAND = "eaglefactionsapartments.command.kick";
 
     private PluginPermissions()
     {

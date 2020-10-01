@@ -16,9 +16,9 @@ repositories {
 }
 
 dependencies {
-    compileOnly 'org.spongepowered:spongeapi:7.2.0'
+    compileOnly 'org.spongepowered:spongeapi:7.3.0'
     compileOnly 'com.github.Aquerr:EagleFactionsAPI:master-SNAPSHOT'
-    annotationProcessor 'org.spongepowered:spongeapi:7.2.0'
+    annotationProcessor 'org.spongepowered:spongeapi:7.3.0'
 }
 
 shadowJar {
